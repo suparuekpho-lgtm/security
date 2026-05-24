@@ -71,6 +71,8 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 .btn-send{background:var(--grn);color:#fff;border-color:var(--grn)}.btn-send:hover{background:#17876A}
 .btn-excel{background:#166534;color:#fff;border-color:#166534}.btn-excel:hover{background:#14532D}
 .btn-adm{background:var(--adm);color:#fff;border-color:var(--adm)}.btn-adm:hover{background:#6D28D9}
+.btn-copy{background:#0C447C;color:#E6F1FB;border-color:#0C447C}.btn-copy:hover{background:#185FA5}
+.btn-copy-line{background:#06C755;color:#fff;border-color:#06C755}.btn-copy-line:hover{background:#05B04C}
 .btn-sm{width:auto;padding:7px 14px;font-size:13px}
 .btn-xs{width:auto;padding:5px 10px;font-size:12px}
 .btn-check{background:var(--grn-lt);color:var(--grn-dk);border-color:var(--grn-bdr);white-space:nowrap}.btn-check:hover{background:var(--grn-bdr)}
@@ -190,9 +192,6 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 .modal p{font-size:13px;color:var(--txt2);margin-bottom:1rem;line-height:1.5}
 .modal-btns{display:flex;gap:8px;flex-direction:column}
 
-/* ADMIN PANEL accent */
-.admin-accent{border-left:3px solid var(--adm);padding-left:10px}
-
 /* role pill */
 .role-pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600}
 .role-user{background:#FEF3C7;color:#92400E}
@@ -209,6 +208,22 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 /* Settings hint */
 .hint-box{background:#FFF7ED;border:0.5px solid #FDE68A;border-radius:var(--rnd-md);padding:10px 12px;font-size:12px;color:#78350F;margin-bottom:12px;line-height:1.6}
 .hint-box code{background:#FEF3C7;padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:11px}
+
+/* ── COPY SUCCESS ANIMATION ── */
+.copy-success-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#DCFCE7;color:#166534;border:1px solid #86EFAC;
+  border-radius:var(--rnd-md);padding:6px 14px;font-size:13px;font-weight:500;
+  opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s;
+  margin-top:6px;width:100%;justify-content:center;
+}
+.copy-success-badge.show{opacity:1;transform:translateY(0)}
+
+/* ── GOOGLE SHEET STATUS ── */
+.sheet-status{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--rnd-md);font-size:12px;margin-bottom:8px}
+.sheet-status-ok{background:#DCFCE7;color:#166534}
+.sheet-status-warn{background:#FEF3C7;color:#92400E}
+.sheet-status-err{background:var(--red-lt);color:var(--red-dk)}
 </style>
 </head>
 <body>
@@ -220,7 +235,7 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 <div id="s-login" class="screen active">
   <div class="topbar topbar-day" style="border-radius:var(--rnd-lg)">
     <i class="ti ti-shield-check" style="font-size:22px"></i>
-    <div class="topbar-title"><h1>ระบบตรวจจุด รปภ.</h1><p>Security Checkpoint System v6</p></div>
+    <div class="topbar-title"><h1>ระบบตรวจจุด รปภ.</h1><p>Security Checkpoint System v7</p></div>
   </div>
   <div class="card">
     <div class="form-group">
@@ -319,22 +334,46 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 </div>
 
 <!-- ══════════════════════════════════════
-     ④ SEND SUCCESS
+     ④ SEND SUCCESS  ← แก้ไขหลัก: เพิ่มปุ่มคัดลอก
 ══════════════════════════════════════ -->
 <div id="s-sent" class="screen">
   <div class="topbar topbar-day">
     <i class="ti ti-circle-check" style="font-size:22px"></i>
     <div class="topbar-title"><h1>ส่งรายงานสำเร็จ</h1><p id="sent-meta">—</p></div>
   </div>
-  <div class="card" style="text-align:center;padding:2rem 1.25rem">
-    <i class="ti ti-circle-check" style="font-size:52px;color:var(--grn);display:block;margin-bottom:10px"></i>
+
+  <!-- Status card -->
+  <div class="card" style="text-align:center;padding:1.5rem 1.25rem">
+    <i class="ti ti-circle-check" style="font-size:48px;color:var(--grn);display:block;margin-bottom:8px"></i>
     <p style="font-size:16px;font-weight:600;margin-bottom:6px">บันทึกรายงานแล้ว</p>
     <p style="font-size:13px;color:var(--txt2)" id="sent-detail">ข้อมูลถูกส่งเรียบร้อย</p>
+
+    <!-- Google Sheet status -->
+    <div id="sheet-status-bar" style="display:none;margin-top:10px"></div>
   </div>
+
+  <!-- Copy report card -->
   <div class="card">
-    <p class="label" style="margin-bottom:8px">สรุปรายงาน</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <p class="label" style="margin-bottom:0">📋 สรุปรายงาน</p>
+      <span style="font-size:11px;color:var(--txt2)">กดคัดลอกเพื่อส่ง Line</span>
+    </div>
     <div class="copy-box" id="sent-preview">—</div>
+
+    <!-- Copy buttons -->
+    <div class="btn-row" style="margin-bottom:4px">
+      <button class="btn btn-copy" onclick="copyReport()">
+        <i class="ti ti-copy"></i> คัดลอกรายงาน
+      </button>
+      <button class="btn btn-copy-line" onclick="copyReport('line')">
+        <i class="ti ti-brand-line"></i> คัดลอก (Line)
+      </button>
+    </div>
+    <div class="copy-success-badge" id="copy-badge">
+      <i class="ti ti-check"></i> คัดลอกแล้ว! วางใน Line ได้เลย
+    </div>
   </div>
+
   <button class="btn" onclick="resetAll()">
     <i class="ti ti-home"></i> กลับหน้าหลัก
   </button>
@@ -363,7 +402,7 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
     </div>
     <div class="hint-box" style="margin-top:12px">
       <strong>AM โรงงานลำพูนสู้ๆ:</strong> <code></code><br>
-       <code>เฝ้าระวังด้วยใจ ปลอดภัยด้วยมาตรฐาน</code> 
+       <code>เฝ้าระวังด้วยใจ ปลอดภัยด้วยมาตรฐาน</code>
     </div>
   </div>
 </div>
@@ -377,6 +416,9 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
     <div class="topbar-title"><h1>Admin Dashboard</h1><p>ระบบตรวจสอบรายงาน</p></div>
     <span class="role-pill role-admin"><i class="ti ti-crown" style="font-size:10px"></i> Admin</span>
   </div>
+
+  <!-- Google Sheet connection status -->
+  <div id="adm-sheet-info" class="card" style="padding:.75rem 1.25rem;margin-bottom:12px"></div>
 
   <!-- Summary stat -->
   <div class="stat-grid" id="adm-stat-grid">
@@ -420,8 +462,15 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
     </button>
   </div>
 
+  <!-- Google Sheet setup guide -->
   <div class="hint-box">
-    <strong>🔗 Google Sheets:</strong> ตั้งค่า <code>SHEET_URL</code> ในโค้ดเพื่อให้รายงานส่งไปยัง Google Sheet อัตโนมัติ
+    <strong>🔗 แก้ปัญหาข้อมูลไม่รวมศูนย์ — ตั้งค่า Google Sheet:</strong><br>
+    1. เปิด Google Sheet ใหม่ → Extensions → Apps Script<br>
+    2. วางโค้ดจาก <code>gas_script.js</code> ที่ได้รับ<br>
+    3. Deploy → New deployment → Web app → Execute as: Me → Anyone<br>
+    4. คัดลอก URL มาวางใน <code>SHEET_URL</code> ในไฟล์นี้<br>
+    <br>
+    <strong>⚠️ หากยังไม่ตั้งค่า:</strong> ข้อมูลจะเก็บเฉพาะในเครื่องตัวเอง Admin จะไม่เห็นรายงานจากเครื่องอื่น
   </div>
 
   <button class="btn" style="margin-top:4px" onclick="adminLogout()">
@@ -442,6 +491,12 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
     </div>
   </div>
   <div class="stat-grid" id="ar-stats"></div>
+
+  <!-- Copy button for admin view too -->
+  <button class="btn btn-copy" style="margin-bottom:12px" onclick="copyAdminReport()">
+    <i class="ti ti-copy"></i> คัดลอกรายงานนี้
+  </button>
+
   <div class="card" id="ar-list" style="padding:.5rem 1rem"></div>
   <hr class="divider">
   <button class="btn btn-excel" id="ar-excel-btn" onclick="exportSingleReport()">
@@ -466,7 +521,7 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
   <span>กำลังส่งรายงาน…</span>
 </div>
 
-<!-- ADMIN LOGIN MODAL (confirm clear) -->
+<!-- CONFIRM CLEAR MODAL -->
 <div class="modal-bg" id="modal-clear">
   <div class="modal">
     <h3>⚠️ ลบข้อมูลทั้งหมด?</h3>
@@ -481,11 +536,15 @@ body{font-family:var(--fnt);background:var(--bg3);color:var(--txt);min-height:10
 <script>
 /* ============================================================
    CONFIG — แก้ไขตรงนี้
+   ============================================================
+   SHEET_URL: วาง URL ของ Google Apps Script Web App
+   วิธีสร้าง Apps Script ดูในคู่มือ hint-box ด้านบน
+   
+   ตัวอย่าง:
+   const SHEET_URL = 'https://script.google.com/macros/s/AKfy.../exec';
    ============================================================ */
-const ADMIN_PASS = 'am6287'; // รหัส Admin
-// วาง URL ของ Google Apps Script Web App ที่นี่
-// ดูวิธีสร้างได้ในคู่มือด้านล่าง
-const SHEET_URL = ''; // เช่น 'https://script.google.com/macros/s/XXXX/exec'
+const ADMIN_PASS = 'am6287';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbySzTSibaJ2-0YLxW31uWDPzN5FmonOKGldT4g5IZTkPdjzA0kZBfpAPdM3FBz6Ll9rLA/exec'; // ← วาง URL ตรงนี้เพื่อให้ข้อมูลรวมศูนย์
 
 /* ============================================================
    STATIC DATA
@@ -523,10 +582,11 @@ const ROUNDS=[
    STATE
    ============================================================ */
 let G={name:'',id:'',shift:'day',round:null};
-let checks={};     // {id:{done,time,note,photos:[{dataUrl,name}]}}
-let tempPhotos={}; // temp before checkin
+let checks={};
+let tempPhotos={};
 let curFilter='all';
-let viewingReport=null; // report object being viewed in admin
+let viewingReport=null;
+let lastReport=null; // เก็บ report ล่าสุดสำหรับปุ่มคัดลอก
 
 /* ============================================================
    LOCAL STORAGE
@@ -539,7 +599,7 @@ function loadReports(){
 function saveReports(arr){ localStorage.setItem(LS_KEY,JSON.stringify(arr)); }
 function addReport(report){
   const arr=loadReports();
-  arr.unshift(report); // newest first
+  arr.unshift(report);
   saveReports(arr);
 }
 
@@ -708,7 +768,6 @@ function handlePhoto(id, input){
   Array.from(input.files).forEach(file=>{
     const reader=new FileReader();
     reader.onload=e=>{
-      // Resize to max 800px to keep storage manageable
       resizeImage(e.target.result, 800, (resized)=>{
         tempPhotos[id].push({dataUrl:resized, name:file.name});
         renderPrev(id);
@@ -718,7 +777,6 @@ function handlePhoto(id, input){
   });
   input.value='';
 }
-
 function resizeImage(dataUrl, maxSize, cb){
   const img=new Image();
   img.onload=()=>{
@@ -734,7 +792,6 @@ function resizeImage(dataUrl, maxSize, cb){
   };
   img.src=dataUrl;
 }
-
 function renderPrev(id){
   const c=document.getElementById('prev-'+id);
   if(!c) return;
@@ -829,7 +886,7 @@ async function sendReport(){
     shift: G.shift==='day'?'กะเช้า':'กะดึก',
     round: G.round.r,
     roundTime: G.round.time,
-    checks: JSON.parse(JSON.stringify(checks)), // deep copy
+    checks: JSON.parse(JSON.stringify(checks)),
     summary:{
       total: CPS.length,
       done: CPS.filter(cp=>checks[cp.id]&&checks[cp.id].done).length,
@@ -837,14 +894,14 @@ async function sendReport(){
     }
   };
 
-  // Save to localStorage
   addReport(report);
+  lastReport=report; // เก็บไว้สำหรับปุ่มคัดลอก
 
   // Try send to Google Sheets
   let sheetOk=false;
+  let sheetErr='';
   if(SHEET_URL){
     try{
-      // Strip images from sheet payload (too large), send metadata only
       const payload={...report};
       payload.checks={};
       Object.entries(report.checks).forEach(([k,v])=>{
@@ -857,17 +914,38 @@ async function sendReport(){
         body:JSON.stringify(payload)
       });
       sheetOk=true;
-    }catch(e){ console.warn('Sheet error:',e); }
+    }catch(e){ sheetErr=e.message; console.warn('Sheet error:',e); }
   }
 
   document.getElementById('send-overlay').classList.remove('show');
   btn.disabled=false;
 
-  // Show success
+  // Success screen
   const sh=G.shift==='day'?'กะเช้า':'กะดึก';
   document.getElementById('sent-meta').textContent=G.name+' · '+sh+' รอบ '+G.round.r;
   document.getElementById('sent-detail').textContent=
-    `บันทึก ${report.summary.done}/${CPS.length} จุด${sheetOk?' · ส่ง Google Sheet แล้ว':SHEET_URL?' · ไม่สามารถส่ง Sheet':''}`;
+    `บันทึก ${report.summary.done}/${CPS.length} จุด · ${report.date} เวลา ${report.time}`;
+
+  // Google Sheet status bar
+  const statusBar=document.getElementById('sheet-status-bar');
+  if(SHEET_URL){
+    statusBar.style.display='flex';
+    if(sheetOk){
+      statusBar.className='sheet-status sheet-status-ok';
+      statusBar.innerHTML='<i class="ti ti-table-check" style="font-size:16px"></i> ส่งข้อมูลไปยัง Google Sheet เรียบร้อย';
+    } else {
+      statusBar.className='sheet-status sheet-status-err';
+      statusBar.innerHTML='<i class="ti ti-table-off" style="font-size:16px"></i> ไม่สามารถส่ง Google Sheet ได้';
+    }
+  } else {
+    statusBar.style.display='flex';
+    statusBar.className='sheet-status sheet-status-warn';
+    statusBar.innerHTML='<i class="ti ti-info-circle" style="font-size:16px"></i> บันทึกเฉพาะในเครื่องนี้ (ยังไม่ได้ตั้งค่า Google Sheet)';
+  }
+
+  // Reset copy badge
+  document.getElementById('copy-badge').classList.remove('show');
+
   document.getElementById('sent-preview').textContent=buildTextReport(report);
   show('s-sent');
 }
@@ -905,6 +983,77 @@ function buildTextReport(rpt){
 }
 
 /* ============================================================
+   COPY REPORT — ปุ่มคัดลอกสำหรับส่ง Line
+   ============================================================ */
+function copyReport(mode){
+  if(!lastReport){ showToast('ไม่พบข้อมูลรายงาน','err'); return; }
+  const txt=buildTextReport(lastReport);
+  
+  // ลอง Clipboard API ก่อน (ทำงานได้ดีบน iOS/Android ด้วย)
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>{
+      showCopySuccess();
+    }).catch(()=>{
+      fallbackCopy(txt);
+    });
+  } else {
+    fallbackCopy(txt);
+  }
+}
+
+function fallbackCopy(txt){
+  // วิธีเก่า — ใช้ textarea ชั่วคราว
+  const ta=document.createElement('textarea');
+  ta.value=txt;
+  ta.style.position='fixed';
+  ta.style.opacity='0';
+  ta.style.top='0';
+  ta.style.left='0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{
+    document.execCommand('copy');
+    showCopySuccess();
+  } catch(e){
+    showToast('ไม่สามารถคัดลอกได้ กรุณาเลือกข้อความแล้วคัดลอกเอง','err');
+  }
+  document.body.removeChild(ta);
+}
+
+function showCopySuccess(){
+  const badge=document.getElementById('copy-badge');
+  badge.classList.add('show');
+  showToast('คัดลอกรายงานแล้ว! วางใน Line ได้เลย','ok');
+  setTimeout(()=>badge.classList.remove('show'), 4000);
+}
+
+// สำหรับปุ่มคัดลอกในหน้า Admin view
+function copyAdminReport(){
+  if(!viewingReport){ showToast('ไม่พบข้อมูลรายงาน','err'); return; }
+  const txt=buildTextReport(viewingReport);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>{
+      showToast('คัดลอกรายงานแล้ว','ok');
+    }).catch(()=>{
+      fallbackCopySimple(txt);
+    });
+  } else {
+    fallbackCopySimple(txt);
+  }
+}
+
+function fallbackCopySimple(txt){
+  const ta=document.createElement('textarea');
+  ta.value=txt;
+  ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{ document.execCommand('copy'); showToast('คัดลอกแล้ว','ok'); }
+  catch(e){ showToast('คัดลอกไม่ได้ กรุณาเลือกข้อความเอง','err'); }
+  document.body.removeChild(ta);
+}
+
+/* ============================================================
    ADMIN DASHBOARD
    ============================================================ */
 function renderAdminDash(){
@@ -916,7 +1065,22 @@ function renderAdminDash(){
   document.getElementById('adm-today').textContent=todayRpts.length;
   document.getElementById('adm-alerts').textContent=totalAlerts;
 
-  // Set default date range: today
+  // Sheet connection info
+  const info=document.getElementById('adm-sheet-info');
+  if(SHEET_URL){
+    info.innerHTML=`<div class="sheet-status sheet-status-ok" style="margin:0">
+      <i class="ti ti-table-check" style="font-size:16px"></i>
+      <div><strong>Google Sheet เชื่อมต่อแล้ว</strong><br>
+      <span style="font-size:11px;opacity:.8">รายงานจากทุกเครื่องจะถูกส่งไปรวมอัตโนมัติ</span></div>
+    </div>`;
+  } else {
+    info.innerHTML=`<div class="sheet-status sheet-status-warn" style="margin:0">
+      <i class="ti ti-table-off" style="font-size:16px"></i>
+      <div><strong>ยังไม่เชื่อมต่อ Google Sheet</strong><br>
+      <span style="font-size:11px;opacity:.8">Admin จะเห็นเฉพาะรายงานจากเครื่องนี้เท่านั้น</span></div>
+    </div>`;
+  }
+
   const fi=document.getElementById('date-from');
   const ti=document.getElementById('date-to');
   if(!fi.value){ fi.value=today; ti.value=today; }
@@ -1001,7 +1165,7 @@ function viewReport(rpt){
 }
 
 /* ============================================================
-   EXPORT EXCEL — ADMIN (filtered range)
+   EXPORT EXCEL
    ============================================================ */
 async function exportExcelAdmin(){
   const btn=document.getElementById('adm-excel-btn');
@@ -1022,7 +1186,6 @@ async function exportExcelAdmin(){
     btn.disabled=false;
   }
 }
-
 async function exportSingleReport(){
   if(!viewingReport) return;
   const btn=document.getElementById('ar-excel-btn');
@@ -1035,11 +1198,8 @@ async function exportSingleReport(){
     btn.disabled=false;
   }
 }
-
 async function buildExcel(reports, filename){
   const wb=XLSX.utils.book_new();
-
-  /* Sheet 1 — Summary */
   const sumRows=[
     ['รายงานการตรวจจุด รปภ.'],
     ['สร้างเมื่อ', new Date().toLocaleString('th-TH')],
@@ -1048,37 +1208,26 @@ async function buildExcel(reports, filename){
     ['วันที่','เวลาส่ง','ชื่อผู้ตรวจ','รหัส','กะ','รอบ','ช่วงเวลา','ตรวจแล้ว','ยังไม่ตรวจ','พบผิดปกติ']
   ];
   reports.forEach(r=>{
-    sumRows.push([
-      r.date, r.time, r.name, r.empId, r.shift,
-      r.round, r.roundTime,
-      r.summary.done, r.summary.total-r.summary.done, r.summary.alerts
-    ]);
+    sumRows.push([r.date,r.time,r.name,r.empId,r.shift,r.round,r.roundTime,
+      r.summary.done,r.summary.total-r.summary.done,r.summary.alerts]);
   });
   const wsSumm=XLSX.utils.aoa_to_sheet(sumRows);
   wsSumm['!cols']=[{wch:14},{wch:12},{wch:18},{wch:10},{wch:10},{wch:8},{wch:14},{wch:10},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb,wsSumm,'สรุปรายงาน');
 
-  /* Sheet 2 — Detail (one row per checkpoint per report) */
   const detRows=[['วันที่','เวลาส่ง','ชื่อผู้ตรวจ','รหัส','กะ','รอบ','ลำดับจุด','จุดตรวจ','สถานะ','เวลาตรวจ','หมายเหตุ','จำนวนรูป']];
   reports.forEach(r=>{
     CPS.forEach(cp=>{
       const c=r.checks[cp.id]||{};
       const pLen=Array.isArray(c.photos)?c.photos.length:(c.photos||0);
-      detRows.push([
-        r.date, r.time, r.name, r.empId, r.shift, r.round,
-        cp.id, cp.name,
-        c.done?'ตรวจแล้ว':'ยังไม่ตรวจ',
-        c.done?(c.time+' น.'):'—',
-        c.note||'—',
-        pLen
-      ]);
+      detRows.push([r.date,r.time,r.name,r.empId,r.shift,r.round,
+        cp.id,cp.name,c.done?'ตรวจแล้ว':'ยังไม่ตรวจ',c.done?(c.time+' น.'):'—',c.note||'—',pLen]);
     });
   });
   const wsDet=XLSX.utils.aoa_to_sheet(detRows);
   wsDet['!cols']=[{wch:12},{wch:10},{wch:18},{wch:10},{wch:8},{wch:6},{wch:8},{wch:28},{wch:12},{wch:12},{wch:35},{wch:10}];
   XLSX.utils.book_append_sheet(wb,wsDet,'รายละเอียดจุดตรวจ');
 
-  /* Sheet 3 — Anomalies */
   const anoRows=[['วันที่','เวลาส่ง','ชื่อผู้ตรวจ','กะ','รอบ','ลำดับจุด','จุดตรวจ','เวลาตรวจ','รายละเอียดผิดปกติ','จำนวนรูป']];
   reports.forEach(r=>{
     CPS.forEach(cp=>{
@@ -1095,7 +1244,6 @@ async function buildExcel(reports, filename){
     XLSX.utils.book_append_sheet(wb,wsAno,'พบผิดปกติ');
   }
 
-  /* Sheet 4 — Photo metadata */
   const photoRows=[['วันที่','ชื่อผู้ตรวจ','กะ','รอบ','ลำดับจุด','จุดตรวจ','ลำดับรูป','ชื่อไฟล์']];
   let hasPhoto=false;
   reports.forEach(r=>{
@@ -1113,18 +1261,11 @@ async function buildExcel(reports, filename){
     wsP['!cols']=[{wch:12},{wch:18},{wch:8},{wch:6},{wch:8},{wch:28},{wch:10},{wch:25}];
     XLSX.utils.book_append_sheet(wb,wsP,'ข้อมูลรูปภาพ');
   }
-
   XLSX.writeFile(wb, filename.replace(/[\/\\:*?"<>|]/g,'_')+'.xlsx');
-
-  // Also export photo HTML if photos exist
   if(hasPhoto) await exportPhotoHtml(reports, filename);
-
   showToast('Export Excel สำเร็จ','ok');
 }
 
-/* ============================================================
-   EXPORT PHOTO HTML
-   ============================================================ */
 async function exportPhotoHtml(reports, filename){
   let sections='';
   reports.forEach(rpt=>{
@@ -1201,7 +1342,7 @@ function showToast(msg, type='ok'){
    RESET
    ============================================================ */
 function resetAll(){
-  checks={}; tempPhotos={};
+  checks={}; tempPhotos={}; lastReport=null;
   G={name:'',id:'',shift:'day',round:null};
   document.getElementById('inp-name').value='';
   document.getElementById('inp-id').value='';
@@ -1209,6 +1350,81 @@ function resetAll(){
   show('s-login');
 }
 </script>
+
+<!-- ══════════════════════════════════════
+     GOOGLE APPS SCRIPT — วางใน Apps Script
+     ไฟล์ gas_script.js (คัดลอกโค้ดด้านล่าง)
+══════════════════════════════════════
+/*
+// ======== gas_script.js ========
+// วางโค้ดนี้ทั้งหมดใน Google Apps Script
+// Extensions > Apps Script > วางแล้ว Deploy
+
+const SHEET_NAME = 'รายงาน';
+const SHEET_DETAIL = 'รายละเอียด';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // Sheet 1: สรุปรายงาน
+    let sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEET_NAME);
+      sheet.appendRow(['วันที่','เวลา','ชื่อผู้ตรวจ','รหัส','กะ','รอบ','ช่วงเวลา','ตรวจแล้ว','ยังไม่ตรวจ','พบผิดปกติ']);
+    }
+    sheet.appendRow([
+      data.date, data.time, data.name, data.empId,
+      data.shift, data.round, data.roundTime,
+      data.summary.done, data.summary.total - data.summary.done, data.summary.alerts
+    ]);
+    
+    // Sheet 2: รายละเอียดจุดตรวจ
+    let det = ss.getSheetByName(SHEET_DETAIL);
+    if (!det) {
+      det = ss.insertSheet(SHEET_DETAIL);
+      det.appendRow(['วันที่','เวลา','ชื่อผู้ตรวจ','กะ','รอบ','จุดที่','ชื่อจุด','สถานะ','เวลาตรวจ','หมายเหตุ','จำนวนรูป']);
+    }
+    const checkpoints = [
+      {id:1,name:'จุดแท็งก์น้ำบาดาล'},{id:2,name:'จุดโรงจอดรถ'},
+      {id:3,name:'จุดข้างบรรจุมิกเซอร์'},{id:4,name:'จุดเครื่องนึ่ง'},
+      {id:5,name:'จุดปากถัง'},{id:6,name:'จุดโกดัง'},
+      {id:7,name:'จุดห้องควบคุมทรัคดรั้มพ์'},{id:8,name:'จุดไซโล 1'},
+      {id:9,name:'จุดไซโล 2'},{id:10,name:'โรงขยะ'},
+      {id:11,name:'จุดช็อปรับเหมา'},{id:12,name:'จุดถังไซโล'},
+      {id:13,name:'จุดปั้มน้ำดับเพลิง'},{id:14,name:'จุดหอพักเก่า'},
+      {id:15,name:'จุดหอพักใหม่'},{id:16,name:'จุดโรงอาหาร'},
+      {id:17,name:'จุดข้างศูนย์เรียนรู้ TPM'},{id:18,name:'จุดสำนักงาน'}
+    ];
+    checkpoints.forEach(cp => {
+      const c = data.checks[cp.id] || {};
+      det.appendRow([
+        data.date, data.time, data.name, data.shift, data.round,
+        cp.id, cp.name,
+        c.done ? 'ตรวจแล้ว' : 'ยังไม่ตรวจ',
+        c.done ? (c.time + ' น.') : '—',
+        c.note || '—',
+        c.photos || 0
+      ]);
+    });
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'error', msg: err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('OK');
+}
+*/
+-->
+
 </body>
 </html>
     
